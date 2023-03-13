@@ -7,12 +7,14 @@
 #include <time.h>
 
 #define SHARED_MEM_SIZE 4
+#define SEMAPHORE_1 "/activity2_sem1"
+#define SEMAPHORE_2 "/activity2_sem2"
 
 int main()
 {
     // Create and initialize the semaphores
-    sem_t *sem1 = sem_open("/activity2_sem1", O_CREAT, 0666, 1);
-    sem_t *sem2 = sem_open("/activity2_sem2", O_CREAT, 0666, 0);
+    sem_t *sem1 = sem_open(SEMAPHORE_1, O_CREAT, 0666, 1);
+    sem_t *sem2 = sem_open(SEMAPHORE_2, O_CREAT, 0666, 0);
 
     // Create shared memory space
     int fd = shm_open("/activity2_shm", O_CREAT | O_RDWR, 0666);
