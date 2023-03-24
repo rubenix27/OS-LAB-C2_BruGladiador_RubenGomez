@@ -6,14 +6,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define PIPE_NAME "my_pipe"
+#define PIPE_NAME "pipe"
 
-uint8_t operand1, operand2;
+uint8_t number1;
+uint8_t number2;
 char operation;
 
-void generate_operands_and_operation() {
-    operand1 = rand() % 101;
-    operand2 = rand() % 101;
+void get_operation() {
+    number1 = rand() % 101;
+    number2 = rand() % 101;
     int op = rand() % 4;
     switch(op) {
         case 0: operation = '+'; break;
@@ -23,52 +24,57 @@ void generate_operands_and_operation() {
     }
 }
 
-void parent_process(int num_ops) {
-    int fd;
+void parent(int total_operations) {
+    int p;
+
     mkfifo(PIPE_NAME, 0666);
-    fd = open(PIPE_NAME, O_WRONLY);
-    for(int i=0; i<num_ops; i++) {
-        generate_operands_and_operation();
-        write(fd, &operand1, sizeof(operand1));
-        write(fd, &operation, sizeof(operation));
-        write(fd, &operand2, sizeof(operand2));
+    p = open(PIPE_NAME, O_WRONLY);
+    
+    for(int i = 0; i < total_operations; i++) {
+        get_operation();
+        
+        write(p, &number1, sizeof(number1));
+        write(p, &operation, sizeof(operation));
+        write(p, &number2, sizeof(number2));
     }
-    close(fd);
+    close(p);
 }
 
-void child_process() {
-    int fd;
-    uint8_t op1, op2;
-    char op;
-    fd = open(PIPE_NAME, O_RDONLY);
-    while(read(fd, &op1, sizeof(op1)) > 0) {
-        read(fd, &op, sizeof(op));
-        read(fd, &op2, sizeof(op2));
-        printf("%d %c %d = ", op1, op, op2);
-        switch(op) {
-            case '+': printf("%d\n", op1+op2); break;
-            case '-': printf("%d\n", op1-op2); break;
-            case '*': printf("%d\n", op1*op2); break;
-            case '/': printf("%d\n", op1/op2); break;
+void child() {
+    int c;
+    uint8_t first_operand, second_operand;
+    char sign;
+    c = open(PIPE_NAME, O_RDONLY);
+    while(read(c, &first_operand, sizeof(first_operand)) > 0) {
+        read(c, &sign, sizeof(sign));
+        read(c, &second_operand, sizeof(second_operand));
+        printf("%d %c %d = ", first_operand, sign, second_operand);
+        switch(sign) {
+            case '+': printf("%d\n", first_operand + second_operand); break;
+            case '-': printf("%d\n", first_operand - second_operand); break;
+            case '*': printf("%d\n", first_operand * second_operand); break;
+            case '/': printf("%d\n", first_operand / second_operand); break;
         }
     }
-    close(fd);
+    close(c);
 }
-
 int main(int argc, char *argv[]) {
+    
     if(argc != 2) {
-        printf("Usage: %s <num_ops>\n", argv[0]);
+        printf("Usage: %s <total_operations>\n", argv[0]);
         return 1;
     }
-    int num_ops = atoi(argv[1]);
+    int total_operations = atoi(argv[1]);
     pid_t pid = fork();
     if(pid == -1) {
         perror("fork");
         return 1;
     } else if(pid == 0) {
-        child_process();
+        child();
     } else {
-        parent_process(num_ops);
+        
+        parent(total_operations);
+        printf("RUEDA**");
     }
     return 0;
 }
