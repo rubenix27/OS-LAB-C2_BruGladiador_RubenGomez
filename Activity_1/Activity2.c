@@ -37,9 +37,9 @@ int main()
     srand(time(NULL));
 
     // Generate a random number and write it to shared memory
-    int rand_num = rand() % 100 + 1;
-    *shared_mem = rand_num;
-    printf("Random number generated: %d\n", rand_num);
+    int numRandom = rand() % 100 + 1;
+    *shared_mem = numRandom;
+    printf("The random number between 1 and 100: %d\n", numRandom);
 
     // Create child process
     pid_t pid = fork();
@@ -49,15 +49,22 @@ int main()
         while (*shared_mem > 0) {
             sem_wait(sem2);
             *shared_mem -= 1;
-            printf("Child process decremented shared memory: %d\n", *shared_mem);
-            sem_post(sem1);
+            
+            if(*shared_mem == -1){
+                printf("Child ends. \n");
+                sem_close(sem2);
+            }else{
+                printf("Child bounce: %d\n", *shared_mem);
+                sem_post(sem1);
+            }
         }
     } else if (pid > 0) {
         // Parent process
         while (*shared_mem > 0) {
             sem_wait(sem1);
             *shared_mem -= 1;
-            printf("Parent process decremented shared memory: %d\n", *shared_mem);
+            printf("Parent bounce: %d\n", *shared_mem);
+           
             sem_post(sem2);
         }
     } else {
@@ -77,4 +84,3 @@ int main()
 
     return 0;
 }
-
