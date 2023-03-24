@@ -7,7 +7,8 @@ typedef struct {
     uint32_t * data_ptr;
     pthread_mutex_t * mutex1;
     pthread_mutex_t * mutex2;
-} thread_data_t;
+} 
+thread_data_t;
 
 void * thread_func1(void * arg) {
     thread_data_t * data = (thread_data_t *) arg;
@@ -60,7 +61,7 @@ int main(int argc, char * argv[]) {
     pthread_create(&thread2, NULL, thread_func2, &data2);
 
     pthread_mutex_lock(&mutex1);
-
+    
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
 
